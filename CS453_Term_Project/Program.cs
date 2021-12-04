@@ -1,4 +1,6 @@
 ﻿using System;
+using OpenTK;
+using OpenTK.Windowing.Desktop;
 
 namespace CS453_Term_Project
 {
