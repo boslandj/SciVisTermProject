@@ -8,7 +8,10 @@ namespace CS453_Term_Project
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            using (Game game = new Game(GameWindowSettings.Default, NativeWindowSettings.Default))
+            {
+                game.Run();
+            }
         }
     }
 }
