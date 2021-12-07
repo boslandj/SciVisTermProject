@@ -9,6 +9,113 @@ using OpenTK.Mathematics;
 
 namespace CS453_Term_Project
 {
+    class Surface
+    {
+
+        struct Vertex
+        {
+            public float x;
+            public float y;
+            public float z;
+            public bool empty;
+        };
+
+        bool streamline_step(Vertex cpos, ref Vertex npos, bool forward)
+        {
+            //assigning that this vertex is not empty
+            npos.empty = false;
+
+            //setting up the vector components according to the field equation x = yz, y = xz, z = xy
+            float vectx = cpos.y * cpos.z;
+            float vecty = cpos.x * cpos.z;
+            float vectz = cpos.x * cpos.y;
+
+            //going forwards on the stream line
+            if (forward)
+            {
+
+                npos.x = cpos.x + (0.1f * vectx);
+                npos.y = cpos.y + (0.1f * vecty);
+                npos.z = cpos.z + (0.1f * vectz);
+
+            }
+            //going backwards on the streamline
+            else
+            {
+
+                vectx *= -1;
+                vecty *= -1;
+                vectz *= -1;
+
+                npos.x = cpos.x + (0.1f * vectx);
+                npos.y = cpos.y + (0.1f * vecty);
+                npos.z = cpos.z + (0.1f * vectz);
+
+            }
+            //testing the bounds for terminating the stream line
+            if ((npos.x < -500 || npos.x > 500) || (npos.y < -500 || npos.y > 500) || (npos.z < -500 || npos.z > 500))
+            {
+                //return end code
+                return false;
+
+            }
+            else
+            {
+                //return continue code
+                return true;
+
+            }
+
+
+        }
+
+        void build_streamline(float x, float y, float z, ref List<List<Vertex>> arr, ref int index)
+        {
+
+            arr.Add(new List<Vertex>());
+            index++;
+
+            Vertex cpos_f = new Vertex();
+            Vertex cpos_b = new Vertex();
+
+            cpos_f.empty = false;
+            cpos_b.empty = false;
+
+            cpos_f.x = x;
+            cpos_b.x = x;
+            cpos_f.y = y;
+            cpos_b.y = y;
+            cpos_f.z = z;
+            cpos_b.z = z;
+
+            bool forward = true;
+            bool backward = true;
+
+            while(forward || backward)
+            {
+
+                if (forward)
+                {
+                    Vertex npos_f = new Vertex();
+                    forward = streamline_step(cpos_f, ref npos_f, true);
+                    arr[index].Insert(0, npos_f);
+                    cpos_f = npos_f;
+
+                }
+                else if(backward){
+
+                    Vertex npos_b = new Vertex();
+                    backward = streamline_step(cpos_b, ref npos_b, false);
+                    arr[index].Add(npos_b);
+                    cpos_b = npos_b;
+
+                }
+
+            }
+
+
+        }
+    }
     class Game : GameWindow
     {
         private float[] vertices =
