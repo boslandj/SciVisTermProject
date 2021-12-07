@@ -10,13 +10,25 @@ namespace CS453_Term_Project
 {
     class Game : GameWindow
     {
-        float[] vertices = {
-            -0.5f, -0.5f, 0.0f, //Bottom-left vertex
-            0.5f, -0.5f, 0.0f, //Bottom-right vertex
-            0.0f,  0.5f, 0.0f  //Top vertex
+        private float[] vertices =
+        {
+             0.5f,  0.5f, 0.0f, // top right
+             0.5f, -0.5f, 0.0f, // bottom right
+            -0.5f, -0.5f, 0.0f, // bottom left
+            -0.5f,  0.5f, 0.0f, // top left
         };
 
-        int VertexBufferObject;
+        uint[] indices =
+        {
+            // Note that indices start at 0!
+            0, 1, 3, // The first triangle will be the bottom-right half of the triangle
+            1, 2, 3  // Then the second will be the top-right half of the triangle
+        };
+
+        private int VertexBufferObject;
+        private int VertexArrayObject;
+        private int elementBufferObject;
+        Shader shader;
 
         public Game(GameWindowSettings gws, NativeWindowSettings nws)
             : base(gws, nws)
@@ -25,20 +37,45 @@ namespace CS453_Term_Project
 
         protected override void OnLoad()
         {
+            base.OnLoad();
+
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
             this.VertexBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, this.VertexBufferObject);
             GL.BufferData(BufferTarget.ArrayBuffer, this.vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+            
+            this.VertexArrayObject = GL.GenVertexArray();
+            GL.BindVertexArray(VertexArrayObject);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(0);
 
-            base.OnLoad();
+            this.elementBufferObject = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, this.elementBufferObject);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, this.indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
+
+            this.shader = new Shader("..\\..\\..\\shader.Vert", "..\\..\\..\\shader.frag");
+            this.shader.Use();
+        }
+
+        public void UpdateGeometry(float[] Vert, uint[] Idx)
+        {
+            GL.BufferData(BufferTarget.ArrayBuffer, Vert.Length * sizeof(float), Vert, BufferUsageHint.StaticDraw);
+
+            GL.BufferData(BufferTarget.ElementArrayBuffer, Idx.Length * sizeof(uint), Idx, BufferUsageHint.StaticDraw);
         }
 
         protected override void OnUnload()
         {
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+            GL.BindVertexArray(0);
+            GL.UseProgram(0);
+
             GL.DeleteBuffer(VertexBufferObject);
+            GL.DeleteVertexArray(VertexArrayObject);
+
+            shader.Dispose();
+
             base.OnUnload();
         }
 
@@ -50,12 +87,33 @@ namespace CS453_Term_Project
 
         protected override void OnRenderFrame(FrameEventArgs args)
         {
+            float[] Vert =
+            {
+                    0.0f, 0.5f, 0.0f,
+                    0.5f, 0.0f, 0.0f,
+                    0.0f, -0.5f, 0.0f,
+                    -0.5f, 0.0f, 0.0f
+            };
+
+            uint[] Idx =
+            {
+                    0, 1, 2,
+                    0, 2, 3
+            };
+
+            this.UpdateGeometry(Vert, Idx);
+
+            base.OnRenderFrame(args);
+
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
-            //Code goes here.
+            this.shader.Use();
+
+            GL.BindVertexArray(VertexArrayObject);
+
+            GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
 
             Context.SwapBuffers();
-            base.OnRenderFrame(args);
         }
     }
 }

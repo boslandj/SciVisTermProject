@@ -12,23 +12,16 @@ namespace CS453_Term_Project
     class Shader
     {
         int Handle;
+        private bool disposedValue = false;
 
         public Shader(string vertexPath, string fragmentPath)
         {
             // read shader source code
             string VertexShaderSource;
-
-            using (StreamReader reader = new StreamReader(vertexPath, Encoding.UTF8))
-            {
-                VertexShaderSource = reader.ReadToEnd();
-            }
+            VertexShaderSource = File.ReadAllText(vertexPath);
 
             string FragmentShaderSource;
-
-            using (StreamReader reader = new StreamReader(fragmentPath, Encoding.UTF8))
-            {
-                FragmentShaderSource = reader.ReadToEnd();
-            }
+            FragmentShaderSource = File.ReadAllText(fragmentPath);
 
 
             // create shaders
@@ -49,7 +42,6 @@ namespace CS453_Term_Project
             GL.CompileShader(FragmentShader);
 
             string infoLogFrag = GL.GetShaderInfoLog(FragmentShader);
-
             if (infoLogFrag != System.String.Empty)
                 System.Console.WriteLine(infoLogFrag);
 
@@ -73,9 +65,25 @@ namespace CS453_Term_Project
             GL.UseProgram(Handle);
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                GL.DeleteProgram(Handle);
+
+                disposedValue = true;
+            }
+        }
+
         ~Shader()
         {
             GL.DeleteProgram(Handle);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }
