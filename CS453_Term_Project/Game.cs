@@ -5,6 +5,7 @@ using OpenTK;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
 
 namespace CS453_Term_Project
 {
@@ -12,8 +13,8 @@ namespace CS453_Term_Project
     {
         private float[] vertices =
         {
-             0.5f,  0.5f, 0.0f, // top right
-             0.5f, -0.5f, 0.0f, // bottom right
+             0.5f,  0.5f, 2.0f, // top right
+             0.5f, -0.5f, 2.0f, // bottom right
             -0.5f, -0.5f, 0.0f, // bottom left
             -0.5f,  0.5f, 0.0f, // top left
         };
@@ -29,6 +30,12 @@ namespace CS453_Term_Project
         private int VertexArrayObject;
         private int elementBufferObject;
         Shader shader;
+        Matrix4 Pers = Matrix4.Identity;
+        Matrix4 Tran = Matrix4.Identity * Matrix4.CreateTranslation(0, 0, -10.0f);
+        Matrix4 RotX = Matrix4.Identity;
+        Matrix4 RotY = Matrix4.Identity;
+        Matrix4 CameraT = Matrix4.Identity;
+        
 
         public Game(GameWindowSettings gws, NativeWindowSettings nws)
             : base(gws, nws)
@@ -82,6 +89,7 @@ namespace CS453_Term_Project
         protected override void OnResize(ResizeEventArgs e)
         {
             GL.Viewport(0, 0, e.Width, e.Height);
+            Pers = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(90), (float)e.Width / (float)e.Height, 0.0001f, 10000.0f);
             base.OnResize(e);
         }
 
@@ -89,19 +97,46 @@ namespace CS453_Term_Project
         {
             float[] Vert =
             {
-                    0.0f, 0.5f, 0.0f,
-                    0.5f, 0.0f, 0.0f,
-                    0.0f, -0.5f, 0.0f,
-                    -0.5f, 0.0f, 0.0f
+                    1.5f, 1.5f, 0.0f,
+                    1.5f, 0.1f, 0.0f,
+                    0.1f, 0.1f, 0.0f,
+                    0.1f, 1.5f, 0.0f,
+
+                    0.1f, -0.1f, 0.0f,
+                    1.5f, -0.1f, 0.0f,
+                    1.5f, -1.5f, 0.0f,
+                    0.1f, -1.5f, 0.0f,
+
+                    -0.1f, -0.1f, 0.0f,
+                    -1.5f, -0.1f, 0.0f,
+                    -1.5f, -1.5f, 0.0f,
+                    -0.1f, -1.5f, 0.0f,
+
+                    -1.5f, 1.5f, 0.0f,
+                    -0.1f, 1.5f, 0.0f,
+                    -0.1f, 0.1f, 0.0f,
+                    -1.5f, 0.1f, 0.0f
             };
 
             uint[] Idx =
             {
                     0, 1, 2,
-                    0, 2, 3
+                    0, 2, 3,
+
+                    4, 5, 6,
+                    4, 6, 7,
+
+                    8, 9, 10,
+                    8, 10, 11,
+
+                    12, 13, 14,
+                    12, 14, 15
             };
 
-            this.UpdateGeometry(Vert, Idx);
+            vertices = Vert;
+            indices = Idx;
+
+            this.UpdateGeometry(vertices, indices);
 
             base.OnRenderFrame(args);
 
@@ -109,11 +144,83 @@ namespace CS453_Term_Project
 
             this.shader.Use();
 
+            this.shader.SetMatrix4("transform", CameraT);
+
             GL.BindVertexArray(VertexArrayObject);
 
             GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
 
             Context.SwapBuffers();
+        }
+
+        protected override void OnUpdateFrame(FrameEventArgs args)
+        {
+            base.OnUpdateFrame(args);
+
+            var mov_input = KeyboardState;
+
+            Vector3 Translate = new Vector3();
+            Matrix4 RotationX = Matrix4.Identity;
+            Matrix4 RotationY = Matrix4.Identity;
+
+            float mov_int = 0.0025f;
+            float rot_mul = 0.01f;
+
+            if (mov_input.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.LeftShift))
+            {
+                mov_int = 0.005f;
+            }
+
+            if (mov_input.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.W))
+            {
+                Translate.Z += mov_int;
+            }
+
+            if (mov_input.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.S))
+            {
+                Translate.Z -= mov_int;
+            }
+
+            if (mov_input.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.A))
+            {
+                Translate.X += mov_int;
+            }
+
+            if (mov_input.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.D))
+            {
+                Translate.X -= mov_int;
+            }
+
+            if (mov_input.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.Space))
+            {
+                Translate.Y -= mov_int;
+            }
+
+            if (mov_input.IsKeyDown(OpenTK.Windowing.GraphicsLibraryFramework.Keys.LeftAlt))
+            {
+                Translate.Y += mov_int;
+            }
+
+            if (MouseState.IsButtonDown(OpenTK.Windowing.GraphicsLibraryFramework.MouseButton.Button1))
+            {
+                RotationX *= Matrix4.CreateRotationY(MouseState.Delta.X * rot_mul);
+                RotationY *= Matrix4.CreateRotationX(MouseState.Delta.Y * rot_mul);
+            }
+
+            RotX *= RotationX;
+            RotY *= RotationY;
+
+            var TranRot = RotX * RotY;
+
+            Translate = Vector3.Transform(Translate, TranRot.ExtractRotation().Inverted());
+
+            Tran *= Matrix4.CreateTranslation(Translate.X, Translate.Y, Translate.Z);
+
+            CameraT = Matrix4.Identity;
+            CameraT *= Tran;
+            CameraT *= RotX;
+            CameraT *= RotY;
+            CameraT *= Pers;
         }
     }
 }
