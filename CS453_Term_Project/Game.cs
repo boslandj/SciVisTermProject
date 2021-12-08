@@ -68,7 +68,9 @@ namespace CS453_Term_Project
                 surf.Insert(i, new List<Vertex>());
 
                 surf[i].Add(start1 + delta);
+
             }
+            Advance_Front();
         }
 
         Vertex Vec_Fun(Vertex start)
@@ -167,12 +169,59 @@ namespace CS453_Term_Project
                         surf[i1 + 1][surf.Count - 2] = v3;
                     }
                 }
+                //need to progress counters
+                i1 = i2;
+                i2++;
             }
         }
 
         private void Con()
         {
+            int i1 = 0;
+            int i2 = 0;
+            int i3 = 0;
 
+            while(i1 < surf.Count - 1)
+            {
+                for (; i3 < surf.Count; i3++)
+                {
+                    if (!surf[i3][surf.Count - 2].empty)
+                        break;
+                }
+                if (i3 >= surf.Count)
+                    break;
+                i2 = i3;
+                for (; i3 < surf.Count; i3++)
+                {
+                    if (!surf[i3][surf.Count - 2].empty)
+                        break;
+                }
+                if (i3 >= surf.Count)
+                    break;
+
+                float A1 = Angle(surf[i1][surf.Count - 2], surf[i2][surf.Count - 2], surf[i1][surf.Count - 1]);
+                float A2 = Angle(surf[i3][surf.Count - 2], surf[i2][surf.Count - 2], surf[i3][surf.Count - 1]);
+                float ln = Distance(surf[i1][surf.Count - 2], surf[i2][surf.Count - 2]) + Distance(surf[i2][surf.Count - 2], surf[i3][surf.Count - 2]);
+
+                if (
+                    A1 < MathHelper.DegreesToRadians(90) &&
+                    A2 < MathHelper.DegreesToRadians(90) &&
+                    ln < (step / 2)
+                    )
+                {
+
+                    Vertex v1 = surf[i2][surf.Count - 1];
+                    Vertex v2 = surf[i2][surf.Count - 2];
+
+                    v1.empty = true;
+                    v2.empty = true;
+                    surf[i2][surf.Count - 1] = v1;
+                    surf[i2][surf.Count - 2] = v2;
+                }
+                //need to progress counters
+                //i1 = i2;
+                //i2 = i3;
+            }
         }
 
         private void Cur()
@@ -181,43 +230,29 @@ namespace CS453_Term_Project
         }
 
 
-        public void Adavance_Front()
+        public void Advance_Front()
         {
+            for(int i = 0; i < surf.Count; i++)
+            {
+
+                surf[i].Add(streamline_step(surf[i][surf[i].Count - 1]));
+
+            }
 
         }
 
-        public void streamline_step(Vertex cpos, ref Vertex npos, bool forward)
+        public Vertex streamline_step(Vertex cpos)
         {
-            //assigning that this vertex is not empty
-            npos.empty = false;
 
             //setting up the vector components according to the field equation x = yz, y = xz, z = xy
-            float vectx = cpos.y * cpos.z;
-            float vecty = cpos.x * cpos.z;
-            float vectz = cpos.x * cpos.y;
+            Vertex vect = Vec_Fun(cpos);
 
             //going forwards on the stream line
-            if (forward)
-            {
+            vect = 0.1f * vect;
 
-                npos.x = cpos.x + (0.1f * vectx);
-                npos.y = cpos.y + (0.1f * vecty);
-                npos.z = cpos.z + (0.1f * vectz);
+            //returning the new vector
 
-            }
-            //going backwards on the streamline
-            else
-            {
-
-                vectx *= -1;
-                vecty *= -1;
-                vectz *= -1;
-
-                npos.x = cpos.x + (0.1f * vectx);
-                npos.y = cpos.y + (0.1f * vecty);
-                npos.z = cpos.z + (0.1f * vectz);
-
-            }
+            return cpos + vect;
         }
 
         public void build_streamline(float x, float y, float z, ref List<List<Vertex>> arr)
@@ -251,7 +286,7 @@ namespace CS453_Term_Project
                 if (forward)
                 {
                     Vertex npos_f = new Vertex();
-                    streamline_step(cpos_f, ref npos_f, true);
+                    streamline_step(cpos_f);
                     arr[index].Insert(0, npos_f);
                     cpos_f = npos_f;
 
@@ -259,7 +294,7 @@ namespace CS453_Term_Project
                 else if(backward){
 
                     Vertex npos_b = new Vertex();
-                    streamline_step(cpos_b, ref npos_b, false);
+                    streamline_step(cpos_b);
                     arr[index].Add(npos_b);
                     cpos_b = npos_b;
 
