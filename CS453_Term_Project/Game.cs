@@ -9,18 +9,184 @@ using OpenTK.Mathematics;
 
 namespace CS453_Term_Project
 {
+    struct Vertex
+    {
+        public float x;
+        public float y;
+        public float z;
+        public bool empty;
+
+
+        public Vertex(float X, float Y, float Z, bool Empty)
+        {
+            this.x = X;
+            this.y = Y;
+            this.z = Z;
+            this.empty = Empty;
+        }
+
+        public static Vertex operator *(Vertex a, Vertex b) => new Vertex(a.x * b.x, a.y * b.y, a.z * b.z, a.empty);
+        public static Vertex operator +(Vertex a, Vertex b) => new Vertex(a.x + b.x, a.y + b.y, a.z + b.z, a.empty);
+        public static Vertex operator -(Vertex a, Vertex b) => new Vertex(a.x - b.x, a.y - b.y, a.z - b.z, a.empty);
+        public static Vertex operator *(float f, Vertex a) => new Vertex(a.x * f, a.y * f, a.z * f, a.empty);
+
+        public Vector3 ToVector3()
+        {
+            return new Vector3(this.x, this.y, this.z);
+        }
+    };
+
     class Surface
     {
+        List<List<Vertex>> surf = new List<List<Vertex>>();
+        float step;
+        Vertex start1;
+        Vertex start2;
 
-        struct Vertex
+        float erot = MathHelper.DegreesToRadians(3);
+
+        public Surface(float x1, float y1, float z1, float x2, float y2, float z2, float Step)
         {
-            public float x;
-            public float y;
-            public float z;
-            public bool empty;
-        };
+            start1 = new Vertex(x1, y1, z1, false);
+            start2 = new Vertex(x2, y2, z2, false);
+            step = Step;
 
-        bool streamline_step(Vertex cpos, ref Vertex npos, bool forward)
+            float dist = MathF.Sqrt(MathF.Pow(x1 - x2, 2.0f) + MathF.Pow(y1 - y2, 2.0f) + MathF.Pow(z1 - z2, 2.0f));
+            int stepCnt = (int)(dist / step);
+            stepCnt *= 2;
+
+            surf.Add(new List<Vertex>());
+            surf.Add(new List<Vertex>());
+            surf[0].Add(start1);
+            surf[1].Add(start2);
+
+            for(int i = 1; i < stepCnt; i++)
+            {
+                Vertex delta = start2 - start1;
+                delta = ((float)i / (float)stepCnt) * delta;
+
+                surf.Insert(i, new List<Vertex>());
+
+                surf[i].Add(start1 + delta);
+            }
+        }
+
+        Vertex Vec_Fun(Vertex start)
+        {
+            return new Vertex(
+                start.y * start.z,
+                start.x * start.z,
+                start.x * start.y,
+                false);
+        }
+
+        float Distance(Vertex A, Vertex B)
+        {
+            Vector3 v1 = A.ToVector3();
+            Vector3 v2 = B.ToVector3();
+
+            return (v1 - v2).Length;
+        }
+
+        float Angle(Vertex S, Vertex A, Vertex B)
+        {
+            Vector3 v1 = (S - A).ToVector3();
+            Vector3 v2 = (S - B).ToVector3();
+
+            return MathF.Acos(Vector3.Dot(v1, v2) / (v1.Length * v2.Length));
+        }
+
+        private void Div()
+        {
+            int i1 = 0;
+            int i2 = 1;
+
+            while(i1 < surf.Count - 1)
+            {
+                for(; i2 < surf.Count; i2++)
+                {
+                    if (!surf[i2][surf.Count - 2].empty)
+                        break;
+                }
+                if (i2 >= surf.Count)
+                    break;
+
+                float A1 = Angle(surf[i1][surf.Count - 2], surf[i2][surf.Count - 2], surf[i1][surf.Count - 1]);
+                float A2 = Angle(surf[i2][surf.Count - 2], surf[i1][surf.Count - 2], surf[i2][surf.Count - 1]);
+                float ln = Distance(surf[i1][surf.Count - 2], surf[i2][surf.Count - 2]);
+
+                if(
+                    A1 > MathHelper.DegreesToRadians(90) &&
+                    A2 > MathHelper.DegreesToRadians(90) &&
+                    ln > (step / 2)
+                    )
+                {
+                    if((i1 + 1) < i2)
+                    {
+                        Vertex v1 = surf[i1][surf.Count - 1];
+                        Vertex v2 = surf[i2][surf.Count - 1];
+
+                        Vertex v3 = v1 + (0.5f * (v2 - v1));
+                        v3.empty = false;
+                        surf[i1 + 1][surf.Count - 1] = v3;
+
+
+                        v1 = surf[i1][surf.Count - 2];
+                        v2 = surf[i2][surf.Count - 2];
+
+                        v3 = v1 + (0.5f * (v2 - v1));
+                        v3.empty = false;
+                        surf[i1 + 1][surf.Count - 2] = v3;
+                    }
+                    else
+                    {
+                        List<Vertex> sl = new List<Vertex>();
+
+                        for(int i = 0; i < surf[0].Count; i++)
+                        {
+                            sl.Add(new Vertex(0.0f, 0.0f, 0.0f, true));
+                        }
+
+                        surf.Insert(i1 + 1, sl);
+
+                        i2++;
+
+                        Vertex v1 = surf[i1][surf.Count - 1];
+                        Vertex v2 = surf[i2][surf.Count - 1];
+
+                        Vertex v3 = v1 + (0.5f * (v2 - v1));
+                        v3.empty = false;
+                        surf[i1 + 1][surf.Count - 1] = v3;
+
+
+                        v1 = surf[i1][surf.Count - 2];
+                        v2 = surf[i2][surf.Count - 2];
+
+                        v3 = v1 + (0.5f * (v2 - v1));
+                        v3.empty = false;
+                        surf[i1 + 1][surf.Count - 2] = v3;
+                    }
+                }
+            }
+        }
+
+        private void Con()
+        {
+
+        }
+
+        private void Cur()
+        {
+
+        }
+
+
+        public void Adavance_Front()
+        {
+
+        }
+
+        public void streamline_step(Vertex cpos, ref Vertex npos, bool forward)
         {
             //assigning that this vertex is not empty
             npos.empty = false;
@@ -52,28 +218,13 @@ namespace CS453_Term_Project
                 npos.z = cpos.z + (0.1f * vectz);
 
             }
-            //testing the bounds for terminating the stream line
-            if ((npos.x < -500 || npos.x > 500) || (npos.y < -500 || npos.y > 500) || (npos.z < -500 || npos.z > 500))
-            {
-                //return end code
-                return false;
-
-            }
-            else
-            {
-                //return continue code
-                return true;
-
-            }
-
-
         }
 
-        void build_streamline(float x, float y, float z, ref List<List<Vertex>> arr, ref int index)
+        public void build_streamline(float x, float y, float z, ref List<List<Vertex>> arr)
         {
 
             arr.Add(new List<Vertex>());
-            index++;
+            int index = arr.Count - 1;
 
             Vertex cpos_f = new Vertex();
             Vertex cpos_b = new Vertex();
@@ -90,14 +241,17 @@ namespace CS453_Term_Project
 
             bool forward = true;
             bool backward = true;
+            uint stepmax = 100;
 
-            while(forward || backward)
+            arr[index].Add(cpos_f);
+            while((forward || backward) && (stepmax > 0))
             {
+                stepmax--;
 
                 if (forward)
                 {
                     Vertex npos_f = new Vertex();
-                    forward = streamline_step(cpos_f, ref npos_f, true);
+                    streamline_step(cpos_f, ref npos_f, true);
                     arr[index].Insert(0, npos_f);
                     cpos_f = npos_f;
 
@@ -105,7 +259,7 @@ namespace CS453_Term_Project
                 else if(backward){
 
                     Vertex npos_b = new Vertex();
-                    backward = streamline_step(cpos_b, ref npos_b, false);
+                    streamline_step(cpos_b, ref npos_b, false);
                     arr[index].Add(npos_b);
                     cpos_b = npos_b;
 
@@ -116,6 +270,7 @@ namespace CS453_Term_Project
 
         }
     }
+
     class Game : GameWindow
     {
         private float[] vertices =
@@ -136,12 +291,14 @@ namespace CS453_Term_Project
         private int VertexBufferObject;
         private int VertexArrayObject;
         private int elementBufferObject;
-        Shader shader;
-        Matrix4 Pers = Matrix4.Identity;
-        Matrix4 Tran = Matrix4.Identity * Matrix4.CreateTranslation(0, 0, -10.0f);
-        Matrix4 RotX = Matrix4.Identity;
-        Matrix4 RotY = Matrix4.Identity;
-        Matrix4 CameraT = Matrix4.Identity;
+        private Shader shader;
+        private Matrix4 Pers = Matrix4.Identity;
+        private Matrix4 Tran = Matrix4.Identity * Matrix4.CreateTranslation(0, 0, -10.0f);
+        private Matrix4 RotX = Matrix4.Identity;
+        private Matrix4 RotY = Matrix4.Identity;
+        private Matrix4 CameraT = Matrix4.Identity;
+
+        private bool drawStream = true;
         
 
         public Game(GameWindowSettings gws, NativeWindowSettings nws)
@@ -202,48 +359,59 @@ namespace CS453_Term_Project
 
         protected override void OnRenderFrame(FrameEventArgs args)
         {
-            float[] Vert =
+            if(drawStream)
             {
-                    1.5f, 1.5f, 0.0f,
-                    1.5f, 0.1f, 0.0f,
-                    0.1f, 0.1f, 0.0f,
-                    0.1f, 1.5f, 0.0f,
+                List<List<Vertex>> surface_arr = new List<List<Vertex>>();
 
-                    0.1f, -0.1f, 0.0f,
-                    1.5f, -0.1f, 0.0f,
-                    1.5f, -1.5f, 0.0f,
-                    0.1f, -1.5f, 0.0f,
+                Surface surface = new Surface();
 
-                    -0.1f, -0.1f, 0.0f,
-                    -1.5f, -0.1f, 0.0f,
-                    -1.5f, -1.5f, 0.0f,
-                    -0.1f, -1.5f, 0.0f,
+                surface.build_streamline(1.0f, 1.0f, 10.0f, ref surface_arr);
+                surface.build_streamline(1.0f, 1.0f, 20.0f, ref surface_arr);
 
-                    -1.5f, 1.5f, 0.0f,
-                    -0.1f, 1.5f, 0.0f,
-                    -0.1f, 0.1f, 0.0f,
-                    -1.5f, 0.1f, 0.0f
-            };
+                List<uint> indxs = new List<uint>();
+                List<float> verts = new List<float>();
 
-            uint[] Idx =
-            {
-                    0, 1, 2,
-                    0, 2, 3,
+                for(uint i = 0; i < surface_arr[0].Count; i++)
+                {
+                    uint offset = (uint)surface_arr[0].Count - 1;
 
-                    4, 5, 6,
-                    4, 6, 7,
+                    indxs.Add(i);
+                    indxs.Add(i + 1);
+                    indxs.Add(i + offset);
 
-                    8, 9, 10,
-                    8, 10, 11,
+                    indxs.Add(i + offset);
+                    indxs.Add(i + offset + 1);
+                    indxs.Add(i + 1);
+                }
 
-                    12, 13, 14,
-                    12, 14, 15
-            };
+                for(int i = 0; i < surface_arr[0].Count; i++)
+                {
+                    verts.Add(surface_arr[0][i].x);
+                    verts.Add(surface_arr[0][i].y);
+                    verts.Add(surface_arr[0][i].z);
+                }
+                for (int i = 0; i < surface_arr[1].Count; i++)
+                {
+                    verts.Add(surface_arr[1][i].x);
+                    verts.Add(surface_arr[1][i].y);
+                    verts.Add(surface_arr[1][i].z);
+                }
 
-            vertices = Vert;
-            indices = Idx;
+                vertices = verts.ToArray();
+                indices = indxs.ToArray();
 
-            this.UpdateGeometry(vertices, indices);
+                this.UpdateGeometry(vertices, indices);
+
+                Console.WriteLine(vertices.Length);
+                Console.WriteLine(indices.Length);
+
+                for (int i = 0; i < vertices.Length; i += 3)
+                {
+                    System.Console.WriteLine(vertices[i].ToString() + ' ' + vertices[i + 1].ToString() + ' ' + vertices[i + 2].ToString());
+                }
+
+                drawStream = false;
+            }
 
             base.OnRenderFrame(args);
 
