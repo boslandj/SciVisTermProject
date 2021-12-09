@@ -79,11 +79,11 @@ namespace CS453_Term_Project
             Vector3 v;
             if(start.z > 0)
             {
-                v = new Vector3(start.x, start.y, start.z);
+                v = new Vector3(-start.y/(MathF.Pow(start.x, 2) + MathF.Pow(start.y, 2)), start.x / (MathF.Pow(start.x, 2) + MathF.Pow(start.y, 2)), 0.0f);
             }
             else
             {
-                v = new Vector3(start.x, start.y, start.z);
+                v = new Vector3(-start.y / (MathF.Pow(start.x, 2) + MathF.Pow(start.y, 2)), start.x / (MathF.Pow(start.x, 2) + MathF.Pow(start.y, 2)), 0.0f);
             }
             v.Normalize();
             return new Vertex(v.X, v.Y, v.Z, false);
@@ -386,6 +386,15 @@ namespace CS453_Term_Project
             //going forwards on the stream line
             vect = 0.5f * step * vect;
 
+            Vector3 vect1 = vect.ToVector3();
+            //Check to see if velocity is zero
+            if(vect1.Length == 0)
+            {
+                //return an empty vertex as the streamline will no longer progress
+                return new Vertex(cpos.x, cpos.y, cpos.z, true);
+
+            }
+
             //returning the new vector
 
             return cpos + vect;
@@ -449,13 +458,13 @@ namespace CS453_Term_Project
                     ins.Add(ins_start + 3);
 
                     add_vert_to_list(j1, i, ref ves);
-                    add_color_to_list(1.0f, 1.0f, 1.0f, ref ves);
+                    add_color_to_list(0.8f, 0.33f, 0.0f, ref ves);
                     add_vert_to_list(j1, i + 1, ref ves);
-                    add_color_to_list(1.0f, 0.0f, 0.0f, ref ves);
+                    add_color_to_list(0.8f, 0.33f, 0.0f, ref ves);
                     add_vert_to_list(j2, i + 1, ref ves);
-                    add_color_to_list(0.0f, 1.0f, 0.0f, ref ves);
+                    add_color_to_list(0.8f, 0.33f, 0.0f, ref ves);
                     add_vert_to_list(j2, i, ref ves);
-                    add_color_to_list(0.0f, 0.0f, 1.0f, ref ves);
+                    add_color_to_list(0.8f, 0.33f, 0.0f, ref ves);
 
                     j1 = j2;
                     j2++;
@@ -566,24 +575,12 @@ namespace CS453_Term_Project
             {
                 List<List<Vertex>> surface_arr = new List<List<Vertex>>();
 
-                Surface surface = new Surface(1.0f, 1.0f, 1.0f, 10.0f , 1.0f, 1.0f, 0.1f);
+                Surface surface = new Surface(1.0f, 1.0f, 1.0f, 10.0f , 2.0f, 2.0f, 0.1f);
 
-                surface.build_surface(1000);
+                surface.build_surface(500);
                 surface.get_geo(out vertices, out indices);
 
                 this.UpdateGeometry(vertices, indices);
-
-                //Console.WriteLine(vertices.Length);
-                //Console.WriteLine(indices.Length);
-
-                //for(int i = 0; i < vertices.Length; i += 3)
-                //{
-                //    Console.WriteLine(vertices[i].ToString() + ' ' + vertices[i + 1].ToString() + ' ' + vertices[i + 2].ToString());
-                //}
-                //for (int i = 0; i < indices.Length; i += 3)
-                //{
-                //    Console.WriteLine(indices[i].ToString() + ' ' + indices[i + 1].ToString() + ' ' + indices[i + 2].ToString());
-                //}
 
                 drawStream = false;
             }
