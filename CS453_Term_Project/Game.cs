@@ -79,11 +79,11 @@ namespace CS453_Term_Project
             Vector3 v;
             if(start.z > 0)
             {
-                v = new Vector3(1.0f / start.x, 1.0f / start.y, 0.0f);
+                v = new Vector3(start.x, start.y, start.z);
             }
             else
             {
-                v = new Vector3(1.0f / start.x, 1.0f / start.y, 0.0f);
+                v = new Vector3(start.x, start.y, start.z);
             }
             v.Normalize();
             return new Vertex(v.X, v.Y, v.Z, false);
@@ -137,7 +137,7 @@ namespace CS453_Term_Project
 
                         Vertex v3 = v1 + (0.5f * (v2 - v1));
                         v3.empty = false;
-                        surf[i1 + 1][surf.Count - 1] = v3;
+                        surf[i1 + 1][surf[i1 + 1].Count - 1] = v3;
 
 
                         v1 = surf[i1][surf[i1].Count - 2];
