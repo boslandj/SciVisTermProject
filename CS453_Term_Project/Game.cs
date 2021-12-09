@@ -29,6 +29,7 @@ namespace CS453_Term_Project
         public static Vertex operator +(Vertex a, Vertex b) => new Vertex(a.x + b.x, a.y + b.y, a.z + b.z, a.empty);
         public static Vertex operator -(Vertex a, Vertex b) => new Vertex(a.x - b.x, a.y - b.y, a.z - b.z, a.empty);
         public static Vertex operator *(float f, Vertex a) => new Vertex(a.x * f, a.y * f, a.z * f, a.empty);
+        public static Vertex operator /(Vertex a, float f) => new Vertex(a.x / f, a.y / f, a.z / f, a.empty);
 
         public Vector3 ToVector3()
         {
@@ -78,11 +79,11 @@ namespace CS453_Term_Project
             Vector3 v;
             if(start.z > 0)
             {
-                v = new Vector3(start.y, -start.x, 0.1f);
+                v = new Vector3(1.0f / start.x, 1.0f / start.y, 0.0f);
             }
             else
             {
-                v = new Vector3(start.y, -start.x, -0.1f);
+                v = new Vector3(1.0f / start.x, 1.0f / start.y, 0.0f);
             }
             v.Normalize();
             return new Vertex(v.X, v.Y, v.Z, false);
@@ -224,6 +225,15 @@ namespace CS453_Term_Project
                     v2.empty = true;
                     surf[i2][surf[i2].Count - 1] = v1;
                     surf[i2][surf[i2].Count - 2] = v2;
+
+                    if (surf[i2].Count >= 3)
+                    {
+                        Vertex v3 = surf[i1][surf[i1].Count - 3];
+                        Vertex v4 = surf[i3][surf[i3].Count - 3];
+
+                        surf[i2][surf[i2].Count - 3] = (v3 + v4) / 2.0f;
+                    }
+
                 }
                 //need to progress counters
                 i1 = i2;
@@ -556,7 +566,7 @@ namespace CS453_Term_Project
             {
                 List<List<Vertex>> surface_arr = new List<List<Vertex>>();
 
-                Surface surface = new Surface(1.0f, 0.0f, -1.0f, 1.0f , 0.0f, 1.0f, 0.1f);
+                Surface surface = new Surface(1.0f, 1.0f, 1.0f, 10.0f , 1.0f, 1.0f, 0.1f);
 
                 surface.build_surface(1000);
                 surface.get_geo(out vertices, out indices);
