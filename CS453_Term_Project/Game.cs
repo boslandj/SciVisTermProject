@@ -75,11 +75,17 @@ namespace CS453_Term_Project
 
         Vertex Vec_Fun(Vertex start)
         {
-            return new Vertex(
-                start.y * start.z,
-                start.x * start.z,
-                start.x * start.y,
-                false);
+            Vector3 v;
+            if(start.z > 0)
+            {
+                v = new Vector3(start.y, -start.x, 0.1f);
+            }
+            else
+            {
+                v = new Vector3(start.y, -start.x, -0.1f);
+            }
+            v.Normalize();
+            return new Vertex(v.X, v.Y, v.Z, false);
         }
 
         float Distance(Vertex A, Vertex B)
@@ -107,7 +113,7 @@ namespace CS453_Term_Project
             {
                 for(; i2 < surf.Count; i2++)
                 {
-                    if (!surf[i2][surf.Count - 2].empty)
+                    if (!surf[i2][surf[i2].Count - 2].empty)
                         break;
                 }
                 if (i2 >= surf.Count)
@@ -183,17 +189,18 @@ namespace CS453_Term_Project
 
             while(i1 < surf.Count - 1)
             {
-                for (; i3 < surf.Count; i3++)
+                for (; i2 < surf.Count; i2++)
                 {
-                    if (!surf[i3][surf.Count - 2].empty)
+                    if (!surf[i2][surf[i2].Count - 2].empty)
                         break;
                 }
-                if (i3 >= surf.Count)
+                if (i2 >= surf.Count)
                     break;
-                i2 = i3;
+                i3 = i2;
+                i3++;
                 for (; i3 < surf.Count; i3++)
                 {
-                    if (!surf[i3][surf.Count - 2].empty)
+                    if (!surf[i3][surf[i3].Count - 2].empty)
                         break;
                 }
                 if (i3 >= surf.Count)
@@ -225,9 +232,127 @@ namespace CS453_Term_Project
             }
         }
 
+        private void Cur_Right()
+        {
+            int i1 = 0;
+            int i2 = 1;
+            bool rot = false;
+            float prevlen = 0;
+
+            while (i1 < surf.Count - 1)
+            {
+                for (; i2 < surf.Count; i2++)
+                {
+                    if (!surf[i2][surf[i2].Count - 2].empty)
+                        break;
+                }
+                if (i2 >= surf.Count)
+                    break;
+
+                float A1 = Angle(surf[i1][surf[i1].Count - 2], surf[i2][surf[i2].Count - 2], surf[i1][surf[i1].Count - 1]);
+                float A2 = Angle(surf[i2][surf[i2].Count - 2], surf[i1][surf[i1].Count - 2], surf[i2][surf[i2].Count - 1]);
+
+                if (
+                    A1 < MathHelper.DegreesToRadians(90) - erot &&
+                    A2 > MathHelper.DegreesToRadians(90) + erot
+                    )
+                {
+                    rot = true;
+
+                    Vector3 vl = (surf[i1][surf[i1].Count - 1] - surf[i1][surf[i1].Count - 2]).ToVector3();
+                    Vector3 vr = (surf[i2][surf[i2].Count - 1] - surf[i2][surf[i2].Count - 2]).ToVector3();
+
+                    vr.Normalize();
+                    prevlen = A1 / (MathHelper.DegreesToRadians(90) + erot) * vl.Length;
+                    vr =  prevlen * vr;
+
+                    Vertex vertexR = new Vertex(vr.X, vr.Y, vr.Z, false);
+                    vertexR = surf[i2][surf[i2].Count - 2] + vertexR;
+
+                    surf[i2][surf[i2].Count - 1] = vertexR;
+                }
+                else if(
+                    rot &&
+                    !(A1 > MathHelper.DegreesToRadians(90) + erot &&
+                    A2 < MathHelper.DegreesToRadians(90) - erot))
+                {
+                    Vector3 vr = (surf[i2][surf[i2].Count - 1] - surf[i2][surf[i2].Count - 2]).ToVector3();
+                    vr.Normalize();
+                    vr = prevlen * vr;
+                    Vertex vertexR = new Vertex(vr.X, vr.Y, vr.Z, false);
+                    vertexR = surf[i2][surf[i2].Count - 2] + vertexR;
+
+                    surf[i2][surf[i2].Count - 1] = vertexR;
+                }
+                //need to progress counters
+                i1 = i2;
+                i2++;
+            }
+        }
+
+        private void Cur_Left()
+        {
+            int i1 = surf.Count - 1;
+            int i2 = surf.Count - 2;
+
+            float prevlen = 0;
+            bool rot = false;
+
+            while (i1 >= 0)
+            {
+                for (; i2 >= 0; i2--)
+                {
+                    if (!surf[i2][surf[i2].Count - 2].empty)
+                        break;
+                }
+                if (i2 < 0)
+                    break;
+
+                float A1 = Angle(surf[i1][surf[i1].Count - 2], surf[i2][surf[i2].Count - 2], surf[i1][surf[i1].Count - 1]);
+                float A2 = Angle(surf[i2][surf[i2].Count - 2], surf[i1][surf[i1].Count - 2], surf[i2][surf[i2].Count - 1]);
+
+                if (
+                    A1 < MathHelper.DegreesToRadians(90) - erot &&
+                    A2 > MathHelper.DegreesToRadians(90) + erot 
+                    )
+                {
+                    rot = true;
+
+                    Vector3 vl = (surf[i1][surf[i1].Count - 1] - surf[i1][surf[i1].Count - 2]).ToVector3();
+                    Vector3 vr = (surf[i2][surf[i2].Count - 1] - surf[i2][surf[i2].Count - 2]).ToVector3();
+
+                    vr.Normalize();
+                    prevlen = A1 / (MathHelper.DegreesToRadians(90) + erot) * vl.Length;
+                    vr = prevlen * vr;
+
+                    Vertex vertexR = new Vertex(vr.X, vr.Y, vr.Z, false);
+                    vertexR = surf[i2][surf[i2].Count - 2] + vertexR;
+
+                    surf[i2][surf[i2].Count - 1] = vertexR;
+                }
+                else if (
+                    rot &&
+                    !(A1 > MathHelper.DegreesToRadians(90) + erot &&
+                    A2 < MathHelper.DegreesToRadians(90) - erot))
+                {
+                    Vector3 vr = (surf[i2][surf[i2].Count - 1] - surf[i2][surf[i2].Count - 2]).ToVector3();
+                    vr.Normalize();
+                    vr = prevlen * vr;
+                    Vertex vertexR = new Vertex(vr.X, vr.Y, vr.Z, false);
+                    vertexR = surf[i2][surf[i2].Count - 2] + vertexR;
+
+                    surf[i2][surf[i2].Count - 1] = vertexR;
+                }
+                //need to progress counters
+                i1 = i2;
+                i2--;
+            }
+        }
+
         private void Cur()
         {
-
+            Cur_Right();
+            Cur_Left();
         }
 
 
@@ -256,54 +381,79 @@ namespace CS453_Term_Project
             return cpos + vect;
         }
 
-        public void build_streamline(float x, float y, float z, ref List<List<Vertex>> arr)
+        public void build_surface(int iter)
         {
-
-            arr.Add(new List<Vertex>());
-            int index = arr.Count - 1;
-
-            Vertex cpos_f = new Vertex();
-            Vertex cpos_b = new Vertex();
-
-            cpos_f.empty = false;
-            cpos_b.empty = false;
-
-            cpos_f.x = x;
-            cpos_b.x = x;
-            cpos_f.y = y;
-            cpos_b.y = y;
-            cpos_f.z = z;
-            cpos_b.z = z;
-
-            bool forward = true;
-            bool backward = true;
-            uint stepmax = 100;
-
-            arr[index].Add(cpos_f);
-            while((forward || backward) && (stepmax > 0))
+            for(int i = 0; i < iter; i++)
             {
-                stepmax--;
+                Advance_Front();
 
-                if (forward)
+                Div();
+                Con();
+                Cur();
+            }
+        }
+
+        private void add_vert_to_list(int idxs, int idxc, ref List<float> ves)
+        {
+            ves.Add(surf[idxs][idxc].x);
+            ves.Add(surf[idxs][idxc].y);
+            ves.Add(surf[idxs][idxc].z);
+        }
+        private void add_color_to_list(float r, float g, float b, ref List<float> ves)
+        {
+            ves.Add(r);
+            ves.Add(g);
+            ves.Add(b);
+        }
+
+        public void get_geo(out float[] verts, out uint[] indxs)
+        {
+            List<float> ves = new List<float>();
+            List<uint> ins = new List<uint>();
+
+            for(int i = 0; i < surf[0].Count - 1; i++)
+            {
+                int j1 = 0;
+                int j2 = 1;
+
+                for(; j2 < surf.Count;)
                 {
-                    Vertex npos_f = new Vertex();
-                    streamline_step(cpos_f);
-                    arr[index].Insert(0, npos_f);
-                    cpos_f = npos_f;
+                    while (j2 < surf.Count)
+                    {
+                        if (!(surf[j2][i].empty || surf[j2][i + 1].empty))
+                        {
+                            break;
+                        }
+                        j2++;
+                    }
+                    if (j2 >= surf.Count)
+                        break;
 
+                    uint ins_start = (uint)(ves.Count / 6);
+
+                    ins.Add(ins_start);
+                    ins.Add(ins_start + 1);
+                    ins.Add(ins_start + 2);
+                    ins.Add(ins_start);
+                    ins.Add(ins_start + 2);
+                    ins.Add(ins_start + 3);
+
+                    add_vert_to_list(j1, i, ref ves);
+                    add_color_to_list(1.0f, 1.0f, 1.0f, ref ves);
+                    add_vert_to_list(j1, i + 1, ref ves);
+                    add_color_to_list(1.0f, 0.0f, 0.0f, ref ves);
+                    add_vert_to_list(j2, i + 1, ref ves);
+                    add_color_to_list(0.0f, 1.0f, 0.0f, ref ves);
+                    add_vert_to_list(j2, i, ref ves);
+                    add_color_to_list(0.0f, 0.0f, 1.0f, ref ves);
+
+                    j1 = j2;
+                    j2++;
                 }
-                else if(backward){
-
-                    Vertex npos_b = new Vertex();
-                    streamline_step(cpos_b);
-                    arr[index].Add(npos_b);
-                    cpos_b = npos_b;
-
-                }
-
             }
 
-
+            verts = ves.ToArray();
+            indxs = ins.ToArray();
         }
     }
 
@@ -346,7 +496,12 @@ namespace CS453_Term_Project
         {
             base.OnLoad();
 
+            GL.Enable(EnableCap.DepthTest);
+            GL.DepthFunc(DepthFunction.Lequal);
+            GL.DepthMask(true);
+
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+            GL.DepthRange(0.0f, 1.0f);
 
             this.VertexBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, this.VertexBufferObject);
@@ -354,8 +509,10 @@ namespace CS453_Term_Project
             
             this.VertexArrayObject = GL.GenVertexArray();
             GL.BindVertexArray(VertexArrayObject);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
+            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
+            GL.EnableVertexAttribArray(1);
 
             this.elementBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, this.elementBufferObject);
@@ -399,59 +556,31 @@ namespace CS453_Term_Project
             {
                 List<List<Vertex>> surface_arr = new List<List<Vertex>>();
 
-                Surface surface = new Surface();
+                Surface surface = new Surface(1.0f, 0.0f, -1.0f, 1.0f , 0.0f, 1.0f, 0.1f);
 
-                surface.build_streamline(1.0f, 1.0f, 10.0f, ref surface_arr);
-                surface.build_streamline(1.0f, 1.0f, 20.0f, ref surface_arr);
-
-                List<uint> indxs = new List<uint>();
-                List<float> verts = new List<float>();
-
-                for(uint i = 0; i < surface_arr[0].Count; i++)
-                {
-                    uint offset = (uint)surface_arr[0].Count - 1;
-
-                    indxs.Add(i);
-                    indxs.Add(i + 1);
-                    indxs.Add(i + offset);
-
-                    indxs.Add(i + offset);
-                    indxs.Add(i + offset + 1);
-                    indxs.Add(i + 1);
-                }
-
-                for(int i = 0; i < surface_arr[0].Count; i++)
-                {
-                    verts.Add(surface_arr[0][i].x);
-                    verts.Add(surface_arr[0][i].y);
-                    verts.Add(surface_arr[0][i].z);
-                }
-                for (int i = 0; i < surface_arr[1].Count; i++)
-                {
-                    verts.Add(surface_arr[1][i].x);
-                    verts.Add(surface_arr[1][i].y);
-                    verts.Add(surface_arr[1][i].z);
-                }
-
-                vertices = verts.ToArray();
-                indices = indxs.ToArray();
+                surface.build_surface(1000);
+                surface.get_geo(out vertices, out indices);
 
                 this.UpdateGeometry(vertices, indices);
 
-                Console.WriteLine(vertices.Length);
-                Console.WriteLine(indices.Length);
+                //Console.WriteLine(vertices.Length);
+                //Console.WriteLine(indices.Length);
 
-                for (int i = 0; i < vertices.Length; i += 3)
-                {
-                    System.Console.WriteLine(vertices[i].ToString() + ' ' + vertices[i + 1].ToString() + ' ' + vertices[i + 2].ToString());
-                }
+                //for(int i = 0; i < vertices.Length; i += 3)
+                //{
+                //    Console.WriteLine(vertices[i].ToString() + ' ' + vertices[i + 1].ToString() + ' ' + vertices[i + 2].ToString());
+                //}
+                //for (int i = 0; i < indices.Length; i += 3)
+                //{
+                //    Console.WriteLine(indices[i].ToString() + ' ' + indices[i + 1].ToString() + ' ' + indices[i + 2].ToString());
+                //}
 
                 drawStream = false;
             }
 
             base.OnRenderFrame(args);
 
-            GL.Clear(ClearBufferMask.ColorBufferBit);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             this.shader.Use();
 

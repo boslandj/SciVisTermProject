@@ -63,6 +63,8 @@ namespace CS453_Term_Project
 
             GL.GetProgram(Handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
 
+            Console.WriteLine("numberOfUniforms: " + numberOfUniforms.ToString());
+
             // Next, allocate the dictionary to hold the locations.
             uniformLocations = new Dictionary<string, int>();
 
