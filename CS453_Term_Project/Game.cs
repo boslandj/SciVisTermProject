@@ -113,9 +113,9 @@ namespace CS453_Term_Project
                 if (i2 >= surf.Count)
                     break;
 
-                float A1 = Angle(surf[i1][surf.Count - 2], surf[i2][surf.Count - 2], surf[i1][surf.Count - 1]);
-                float A2 = Angle(surf[i2][surf.Count - 2], surf[i1][surf.Count - 2], surf[i2][surf.Count - 1]);
-                float ln = Distance(surf[i1][surf.Count - 2], surf[i2][surf.Count - 2]);
+                float A1 = Angle(surf[i1][surf[i1].Count - 2], surf[i2][surf[i2].Count - 2], surf[i1][surf[i1].Count - 1]);
+                float A2 = Angle(surf[i2][surf[i2].Count - 2], surf[i1][surf[i1].Count - 2], surf[i2][surf[i2].Count - 1]);
+                float ln = Distance(surf[i1][surf[i1].Count - 2], surf[i2][surf[i2].Count - 2]);
 
                 if(
                     A1 > MathHelper.DegreesToRadians(90) &&
@@ -125,20 +125,20 @@ namespace CS453_Term_Project
                 {
                     if((i1 + 1) < i2)
                     {
-                        Vertex v1 = surf[i1][surf.Count - 1];
-                        Vertex v2 = surf[i2][surf.Count - 1];
+                        Vertex v1 = surf[i1][surf[i1].Count - 1];
+                        Vertex v2 = surf[i2][surf[i2].Count - 1];
 
                         Vertex v3 = v1 + (0.5f * (v2 - v1));
                         v3.empty = false;
                         surf[i1 + 1][surf.Count - 1] = v3;
 
 
-                        v1 = surf[i1][surf.Count - 2];
-                        v2 = surf[i2][surf.Count - 2];
+                        v1 = surf[i1][surf[i1].Count - 2];
+                        v2 = surf[i2][surf[i2].Count - 2];
 
                         v3 = v1 + (0.5f * (v2 - v1));
                         v3.empty = false;
-                        surf[i1 + 1][surf.Count - 2] = v3;
+                        surf[i1 + 1][surf[i1 + 1].Count - 2] = v3;
                     }
                     else
                     {
@@ -153,20 +153,20 @@ namespace CS453_Term_Project
 
                         i2++;
 
-                        Vertex v1 = surf[i1][surf.Count - 1];
-                        Vertex v2 = surf[i2][surf.Count - 1];
+                        Vertex v1 = surf[i1][surf[i1].Count - 1];
+                        Vertex v2 = surf[i2][surf[i2].Count - 1];
 
                         Vertex v3 = v1 + (0.5f * (v2 - v1));
                         v3.empty = false;
-                        surf[i1 + 1][surf.Count - 1] = v3;
+                        surf[i1 + 1][surf[i1 + 1].Count - 1] = v3;
 
 
-                        v1 = surf[i1][surf.Count - 2];
-                        v2 = surf[i2][surf.Count - 2];
+                        v1 = surf[i1][surf[i1].Count - 2];
+                        v2 = surf[i2][surf[i2].Count - 2];
 
                         v3 = v1 + (0.5f * (v2 - v1));
                         v3.empty = false;
-                        surf[i1 + 1][surf.Count - 2] = v3;
+                        surf[i1 + 1][surf[i1 + 1].Count - 2] = v3;
                     }
                 }
                 //need to progress counters
@@ -199,9 +199,9 @@ namespace CS453_Term_Project
                 if (i3 >= surf.Count)
                     break;
 
-                float A1 = Angle(surf[i1][surf.Count - 2], surf[i2][surf.Count - 2], surf[i1][surf.Count - 1]);
-                float A2 = Angle(surf[i3][surf.Count - 2], surf[i2][surf.Count - 2], surf[i3][surf.Count - 1]);
-                float ln = Distance(surf[i1][surf.Count - 2], surf[i2][surf.Count - 2]) + Distance(surf[i2][surf.Count - 2], surf[i3][surf.Count - 2]);
+                float A1 = Angle(surf[i1][surf[i1].Count - 2], surf[i2][surf[i2].Count - 2], surf[i1][surf[i1].Count - 1]);
+                float A2 = Angle(surf[i3][surf[i3].Count - 2], surf[i2][surf[i2].Count - 2], surf[i3][surf[i3].Count - 1]);
+                float ln = Distance(surf[i1][surf[i1].Count - 2], surf[i2][surf[i2].Count - 2]) + Distance(surf[i2][surf[i2].Count - 2], surf[i3][surf[i3].Count - 2]);
 
                 if (
                     A1 < MathHelper.DegreesToRadians(90) &&
@@ -210,17 +210,18 @@ namespace CS453_Term_Project
                     )
                 {
 
-                    Vertex v1 = surf[i2][surf.Count - 1];
-                    Vertex v2 = surf[i2][surf.Count - 2];
+                    Vertex v1 = surf[i2][surf[i2].Count - 1];
+                    Vertex v2 = surf[i2][surf[i2].Count - 2];
 
                     v1.empty = true;
                     v2.empty = true;
-                    surf[i2][surf.Count - 1] = v1;
-                    surf[i2][surf.Count - 2] = v2;
+                    surf[i2][surf[i2].Count - 1] = v1;
+                    surf[i2][surf[i2].Count - 2] = v2;
                 }
                 //need to progress counters
-                //i1 = i2;
-                //i2 = i3;
+                i1 = i2;
+                i2 = i3;
+                i3++;
             }
         }
 
@@ -248,7 +249,7 @@ namespace CS453_Term_Project
             Vertex vect = Vec_Fun(cpos);
 
             //going forwards on the stream line
-            vect = 0.1f * vect;
+            vect = 0.5f * step * vect;
 
             //returning the new vector
 
