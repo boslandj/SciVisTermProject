@@ -1,4 +1,6 @@
-﻿Camera controles
+﻿Code Repo: https://github.com/boslandj/SciVisTermProject
+
+Camera controles
 W - Forward
 S - Backward
 A - Left
